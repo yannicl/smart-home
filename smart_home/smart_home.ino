@@ -3,6 +3,7 @@
  */
 #include <DS3231.h>
 #include <Wire.h>
+#include <LiquidCrystal_I2C.h>
 
 /**
  * PINOUT
@@ -13,17 +14,17 @@ const int switchPin = 2;
 /**
  * Constantes
  */
-const bool century=false;
+bool century=false;
 const int switchMax = 32000; // * 100ms = environ 1h (max int 32767)
-const bool h12=false;
-const bool PM=false;
+bool h12=false;
+bool PM=false;
 
 /**
  * Variables
  */
 bool forceOnState,timerState = false;
 int switchCntr = switchMax + 1;
-int second,minute,hour,date,year,month,dow,temperature;
+int seconds,minutes,hours,date,year,month,dow,temperature;
 int mainLoopCntr;
 
 /**
@@ -53,8 +54,8 @@ void loop()
 
 void printDateTimetoLcd() {
   lcd.setCursor(0,0);
-  printZeroPrefix(hour);
-  lcd.print(hour);
+  printZeroPrefix(hours);
+  lcd.print(hours);
   lcd.print(":");
   printZeroPrefix(minutes);
   lcd.print(minutes);
@@ -81,6 +82,8 @@ void printTimerToLcd() {
   } else {
      lcd.print("OFF   ");
   }
+  lcd.print(" Temp: ");
+  lcd.print(temperature);
 }
 
 
@@ -109,16 +112,16 @@ void switchLoopHandler() {
 
 void timerLoopHandler()
 {
-  second=rtc.getSecond();
-  minute=rtc.getMinute();
-  hour=rtc.getHour(h12,PM);
+  seconds=rtc.getSecond();
+  minutes=rtc.getMinute();
+  hours=rtc.getHour(h12,PM);
   date=rtc.getDate();
   month=rtc.getMonth(century);
   year=rtc.getYear();
   dow=rtc.getDoW();
   temperature=rtc.getTemperature();
     
-  if ((hour < 23 && hour > 16) || forceOnState){
+  if ((hours < 23 && hours > 16) || forceOnState){
     timerState = true;
     digitalWrite(ledPin, HIGH);
   } else {
