@@ -103,7 +103,7 @@ void (* displayFunc[7])() = { &temperatureLoopHandler, &currentDisplay0, &curren
 
 void onEventSecondChanged(int sec) {
   if (sec % 4 == 0) {
-    lcd.clear()
+    lcd.clear();
   }
 
   printDateTimetoLcd();
