@@ -10,6 +10,8 @@
  */
 const int ledPin = 3;
 const int switchPin = 2;
+const int echoPinRanger = 5;
+const int trigPinRanger = 4;
 
 /**
  * Constantes
@@ -26,6 +28,7 @@ bool forceOnState,timerState = false;
 int switchCntr = switchMax + 1;
 int seconds,minutes,hours,date,year,month,dow,temperature;
 int mainLoopCntr;
+int rangerLoopCntr;
 
 /**
  * Objets
@@ -38,6 +41,8 @@ void setup()
   Wire.begin();
   lcd.begin(20,4);
   lcd.backlight();
+  pinMode(trigPinRanger, OUTPUT);
+  pinMode(echoPinRanger, INPUT);
 }
 
 void loop() 
@@ -49,6 +54,7 @@ void loop()
   }
   switchLoopHandler();
   timerLoopHandler();
+  rangerLoopHandler();
   delay(100);
 }
 
@@ -76,13 +82,13 @@ void printTimerToLcd() {
   lcd.setCursor(0,1);
   lcd.print("Timer: ");
   if (forceOnState) {
-     lcd.print("FORCED");
+     lcd.print("MON ");
   } else if (timerState) {
-     lcd.print("ON    ");
+     lcd.print("AON ");
   } else {
-     lcd.print("OFF   ");
+     lcd.print("OFF ");
   }
-  lcd.print(" Temp: ");
+  lcd.print("Temp: ");
   lcd.print(temperature);
 }
 
@@ -128,6 +134,23 @@ void timerLoopHandler()
     timerState = false;
     digitalWrite(ledPin,LOW);
   } 
+}
+
+void rangerLoopHandler()
+{
+  rangerLoopCntr++;
+  if ((rangerLoopCntr % 10) == 0) {
+    digitalWrite(trigPinRanger, LOW);
+    delayMicroseconds(2);
+    digitalWrite(trigPinRanger, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigPinRanger, LOW);
+    float cm = pulseIn(echoPinRanger, HIGH) / 58.0; //The echo time is converted into cm
+    cm = (int(cm * 100.0)) / 100.0; //Keep two decimal places
+    lcd.setCursor(0,2);
+    lcd.print("Dst: ");
+    lcd.print(cm);
+  }
 }
 
 
