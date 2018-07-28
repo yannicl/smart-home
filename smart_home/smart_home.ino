@@ -4,6 +4,7 @@
 #include <DS3231.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
+#include <dht11.h>
 
 /**
  * PINOUT
@@ -12,7 +13,7 @@ const int ledPin = 3;
 const int switchPin = 2;
 const int echoPinRanger = 5;
 const int trigPinRanger = 4;
-
+const int DHT11PIN = 8;
 /**
  * Constantes
  */
@@ -34,6 +35,7 @@ int rangerLoopCntr;
  * Objets
  */
 DS3231 rtc;
+dht11 DHT11;
 LiquidCrystal_I2C lcd(0x27,20,4);  // Set the LCD I2C address
 
 void setup()  
@@ -43,6 +45,7 @@ void setup()
   lcd.backlight();
   pinMode(trigPinRanger, OUTPUT);
   pinMode(echoPinRanger, INPUT);
+  DHT11.read(DHT11PIN);
 }
 
 void loop() 
@@ -55,6 +58,7 @@ void loop()
   switchLoopHandler();
   timerLoopHandler();
   rangerLoopHandler();
+  temperatureLoopHandler();
   delay(100);
 }
 
@@ -148,9 +152,22 @@ void rangerLoopHandler()
     float cm = pulseIn(echoPinRanger, HIGH) / 58.0; //The echo time is converted into cm
     cm = (int(cm * 100.0)) / 100.0; //Keep two decimal places
     lcd.setCursor(0,2);
-    lcd.print("Dst: ");
+    lcd.print("WH: ");
     lcd.print(cm);
+    lcd.setCursor(8,2);
+    lcd.print(" cedric");
+    
   }
+}
+
+void temperatureLoopHandler()
+{
+  lcd.setCursor(0,3);  
+  lcd.print("T:");
+  lcd.print(DHT11.temperature);
+  lcd.print(" ");
+  lcd.print("H%");
+  lcd.print(DHT11.humidity);
 }
 
 
