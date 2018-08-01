@@ -30,6 +30,7 @@ int switchCntr = switchMax + 1;
 int seconds,minutes,hours,date,year,month,dow,temperature;
 int mainLoopCntr;
 int rangerLoopCntr;
+int tempLoopCntr;
 
 /**
  * Objets
@@ -84,7 +85,7 @@ void printDateTimetoLcd() {
 
 void printTimerToLcd() {
   lcd.setCursor(0,1);
-  lcd.print("Timer: ");
+  lcd.print("Timer:");
   if (forceOnState) {
      lcd.print("MON ");
   } else if (timerState) {
@@ -92,7 +93,7 @@ void printTimerToLcd() {
   } else {
      lcd.print("OFF ");
   }
-  lcd.print("Temp: ");
+  lcd.print("Ti:");
   lcd.print(temperature);
 }
 
@@ -150,24 +151,24 @@ void rangerLoopHandler()
     delayMicroseconds(10);
     digitalWrite(trigPinRanger, LOW);
     float cm = pulseIn(echoPinRanger, HIGH) / 58.0; //The echo time is converted into cm
-    cm = (int(cm * 100.0)) / 100.0; //Keep two decimal places
+    cm = (int(cm));
     lcd.setCursor(0,2);
-    lcd.print("WH: ");
+    lcd.print("WH:");
     lcd.print(cm);
-    lcd.setCursor(8,2);
-    lcd.print(" cedric");
-    
   }
 }
 
 void temperatureLoopHandler()
 {
-  lcd.setCursor(0,3);  
-  lcd.print("T:");
-  lcd.print(DHT11.temperature);
-  lcd.print(" ");
-  lcd.print("H%");
-  lcd.print(DHT11.humidity);
+  tempLoopCntr++;
+  if ((tempLoopCntr % 10) == 0) {
+    lcd.setCursor(0,3);  
+    lcd.print("T:");
+    lcd.print(DHT11.temperature);
+    lcd.print("-");
+    lcd.print("H%");
+    lcd.print(DHT11.humidity);
+  }
 }
 
 
