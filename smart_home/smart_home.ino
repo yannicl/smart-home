@@ -46,7 +46,6 @@ void setup()
   lcd.backlight();
   pinMode(trigPinRanger, OUTPUT);
   pinMode(echoPinRanger, INPUT);
-  DHT11.read(DHT11PIN);
 }
 
 void loop() 
@@ -162,6 +161,7 @@ void temperatureLoopHandler()
 {
   tempLoopCntr++;
   if ((tempLoopCntr % 10) == 0) {
+    DHT11.read(DHT11PIN);
     lcd.setCursor(0,3);  
     lcd.print("T:");
     lcd.print(DHT11.temperature);
