@@ -150,10 +150,9 @@ void rangerLoopHandler()
     delayMicroseconds(10);
     digitalWrite(trigPinRanger, LOW);
     float cm = pulseIn(echoPinRanger, HIGH) / 58.0; //The echo time is converted into cm
-    cm = (int(cm));
     lcd.setCursor(0,2);
     lcd.print("WH:");
-    lcd.print(cm);
+    lcd.print((int) cm);
   }
 }
 
