@@ -14,6 +14,9 @@ const int switchPin = 2;
 const int echoPinRanger = 5;
 const int trigPinRanger = 4;
 const int DHT11PIN = 8;
+const int current0Pin = A0;
+const int current1Pin = A1;
+
 /**
  * Constantes
  */
@@ -31,6 +34,7 @@ int seconds,minutes,hours,date,year,month,dow,temperature;
 int mainLoopCntr;
 int rangerLoopCntr;
 int tempLoopCntr;
+int currentLoopCntr;
 
 /**
  * Objets
@@ -59,6 +63,7 @@ void loop()
   timerLoopHandler();
   rangerLoopHandler();
   temperatureLoopHandler();
+  currentLoopHandler();
   delay(100);
 }
 
@@ -163,10 +168,27 @@ void temperatureLoopHandler()
     DHT11.read(DHT11PIN);
     lcd.setCursor(0,3);  
     lcd.print("T:");
+    if (DHT11.temperature < 10) {
+      lcd.print(" ");
+    }
     lcd.print(DHT11.temperature);
     lcd.print("-");
     lcd.print("H%");
     lcd.print(DHT11.humidity);
+  }
+}
+
+void currentLoopHandler()
+{
+  currentLoopCntr++;
+  if ((currentLoopCntr % 10) == 0) {
+    lcd.setCursor(5,2);
+    lcd.print(" ");
+    int currentValue = analogRead(current0Pin);
+    lcd.print(currentValue);
+    lcd.print(" ");
+    currentValue = analogRead(current1Pin);
+    lcd.print(currentValue);
   }
 }
 
