@@ -33,6 +33,8 @@ int switchCntr = switchMax + 1;
 int lastSeconds;
 int seconds,minutes,hours,date,year,month,dow,temperature;
 long inUseSeconds[2];
+int maxCurrent[2];
+int minCurrent[2];
 
 /**
  * Objets
@@ -69,15 +71,18 @@ void loop()
 void onEventSecondChanged(int sec) {
   printDateTimetoLcd();
   printTimerToLcd();
+  currentLoopHandler(current0Pin, 0);
+  currentLoopHandler(current1Pin, 1);
+
+  lcd.clearLine(2);
+  lcd.clearLine(3);
 
   if ((sec % 4) == 0) {
     temperatureLoopHandler();
   } else if ((sec % 4) == 2) {
-    currentLoopHandler(current0Pin, 0);
-    currentInUseDisplay(0);
+    currentDisplay(0);
   } else if ((sec % 4) == 3) {
-    currentLoopHandler(current1Pin, 1);
-    currentInUseDisplay(1);
+    currentDisplay(1);
   } else {
     rangerLoopHandler();    
   }
@@ -173,7 +178,6 @@ void rangerLoopHandler()
   lcd.setCursor(0,2);
   lcd.print("WH:");
   lcd.print((int) cm);
-  lcd.print("               ")
 }
 
 void temperatureLoopHandler()
@@ -185,45 +189,40 @@ void temperatureLoopHandler()
   lcd.print("-");
   lcd.print("H%");
   lcd.print(DHT11.humidity);
-  lcd.print(" ")
 }
 
 void currentLoopHandler(int pin, int pinId)
 {
+  
+  maxCurrent[pinId] = 0;
+  minCurrent[pinId] = 1024;
+  for (int i=0;i<180;i++) {
+    int currentValue = analogRead(pin);    
+    if (currentValue > maxCurrent[pinId]) {
+      maxCurrent[pinId] = currentValue;
+    }
+    if (currentValue < minCurrent[pinId]) {
+      minCurrent[pinId] = currentValue;
+    }
+  }
+  if (maxCurrent[pinId] > 100) {
+    inUseSeconds[pinId]++;
+  }
+
+}
+
+void currentDisplay(int pinId) {
   lcd.setCursor(0,2);
   lcd.print("A");
   lcd.print(pinId);
   lcd.print(" min:");
-  int maxCurrentValue = 0;
-  int minCurrentValue = 1024;
-  for (int i=0;i<180;i++) {
-    int currentValue = analogRead(pin);    
-    if (currentValue > maxCurrentValue) {
-      maxCurrentValue = currentValue;
-    }
-    if (currentValue < minCurrentValue) {
-      minCurrentValue = currentValue;
-    }
-  }
-  if (maxCurrentValue > 100) {
-    inUseSeconds[pinId]++;
-  }
-
-  lcd.print(minCurrentValue);
+  lcd.print(minCurrent[pinId]);
   lcd.print(" max:");
-  lcd.print(maxCurrentValue);
-  if (maxCurrentValue < 1000) {
-    lcd.print(" ");
-  }
-}
+  lcd.print(maxCurrent[pinId]);
 
-void currentInUseDisplay(int pinId) {
   lcd.setCursor(0,3);
-  lcd.print("A");
-  lcd.print(pinId);
-  lcd.print(" inUse:");
+  lcd.print(" inUse (s):");
   lcd.print(inUseSeconds[pinId]);
-  lcd.print("   ");
 }
 
 
