@@ -30,11 +30,9 @@ bool PM=false;
  */
 bool forceOnState,timerState = false;
 int switchCntr = switchMax + 1;
+int lastSeconds;
 int seconds,minutes,hours,date,year,month,dow,temperature;
-int mainLoopCntr;
-int rangerLoopCntr;
-int tempLoopCntr;
-int currentLoopCntr;
+long inUseSeconds[2];
 
 /**
  * Objets
@@ -50,21 +48,39 @@ void setup()
   lcd.backlight();
   pinMode(trigPinRanger, OUTPUT);
   pinMode(echoPinRanger, INPUT);
+  inUseSeconds[0] = 0;
+  inUseSeconds[1] = 0;
 }
 
 void loop() 
 {
-  mainLoopCntr++;
-  if ((mainLoopCntr % 10) == 0) {
-    printDateTimetoLcd();
-    printTimerToLcd();
-  }
   switchLoopHandler();
   timerLoopHandler();
-  rangerLoopHandler();
-  temperatureLoopHandler();
-  currentLoopHandler();
+  
+  seconds=rtc.getSecond();
+  if (seconds != lastSeconds) {
+    onEventSecondChanged(seconds);
+    lastSeconds = seconds;
+  }
+
   delay(100);
+}
+
+void onEventSecondChanged(int sec) {
+  printDateTimetoLcd();
+  printTimerToLcd();
+
+  if ((sec % 4) == 0) {
+    temperatureLoopHandler();
+  } else if ((sec % 4) == 2) {
+    currentLoopHandler(current0Pin, 0);
+    currentInUseDisplay(0);
+  } else if ((sec % 4) == 3) {
+    currentLoopHandler(current1Pin, 1);
+    currentInUseDisplay(1);
+  } else {
+    rangerLoopHandler();    
+  }
 }
 
 void printDateTimetoLcd() {
@@ -147,49 +163,67 @@ void timerLoopHandler()
 
 void rangerLoopHandler()
 {
-  rangerLoopCntr++;
-  if ((rangerLoopCntr % 10) == 0) {
-    digitalWrite(trigPinRanger, LOW);
-    delayMicroseconds(2);
-    digitalWrite(trigPinRanger, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(trigPinRanger, LOW);
-    float cm = pulseIn(echoPinRanger, HIGH) / 58.0; //The echo time is converted into cm
-    lcd.setCursor(0,2);
-    lcd.print("WH:");
-    lcd.print((int) cm);
-  }
+  digitalWrite(trigPinRanger, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPinRanger, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPinRanger, LOW);
+  float cm = pulseIn(echoPinRanger, HIGH) / 58.0; //The echo time is converted into cm
+
+  lcd.setCursor(0,2);
+  lcd.print("WH:");
+  lcd.print((int) cm);
+  lcd.print("               ")
 }
 
 void temperatureLoopHandler()
 {
-  tempLoopCntr++;
-  if ((tempLoopCntr % 10) == 0) {
-    DHT11.read(DHT11PIN);
-    lcd.setCursor(0,3);  
-    lcd.print("T:");
-    if (DHT11.temperature < 10) {
-      lcd.print(" ");
+  DHT11.read(DHT11PIN);
+  lcd.setCursor(0,2);  
+  lcd.print("T:");
+  lcd.print(DHT11.temperature);
+  lcd.print("-");
+  lcd.print("H%");
+  lcd.print(DHT11.humidity);
+  lcd.print(" ")
+}
+
+void currentLoopHandler(int pin, int pinId)
+{
+  lcd.setCursor(0,2);
+  lcd.print("A");
+  lcd.print(pinId);
+  lcd.print(" min:");
+  int maxCurrentValue = 0;
+  int minCurrentValue = 1024;
+  for (int i=0;i<180;i++) {
+    int currentValue = analogRead(pin);    
+    if (currentValue > maxCurrentValue) {
+      maxCurrentValue = currentValue;
     }
-    lcd.print(DHT11.temperature);
-    lcd.print("-");
-    lcd.print("H%");
-    lcd.print(DHT11.humidity);
+    if (currentValue < minCurrentValue) {
+      minCurrentValue = currentValue;
+    }
+  }
+  if (maxCurrentValue > 100) {
+    inUseSeconds[pinId]++;
+  }
+
+  lcd.print(minCurrentValue);
+  lcd.print(" max:");
+  lcd.print(maxCurrentValue);
+  if (maxCurrentValue < 1000) {
+    lcd.print(" ");
   }
 }
 
-void currentLoopHandler()
-{
-  currentLoopCntr++;
-  if ((currentLoopCntr % 10) == 0) {
-    lcd.setCursor(5,2);
-    lcd.print(" ");
-    int currentValue = analogRead(current0Pin);
-    lcd.print(currentValue);
-    lcd.print(" ");
-    currentValue = analogRead(current1Pin);
-    lcd.print(currentValue);
-  }
+void currentInUseDisplay(int pinId) {
+  lcd.setCursor(0,3);
+  lcd.print("A");
+  lcd.print(pinId);
+  lcd.print(" inUse:");
+  lcd.print(inUseSeconds[pinId]);
+  lcd.print("   ");
 }
 
 
