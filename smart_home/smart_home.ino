@@ -16,10 +16,16 @@ const int trigPinRanger = 4;
 const int DHT11PIN = 8;
 const int current0Pin = A0;
 const int current1Pin = A1;
+const int dustSensorOutputPin = A2;
+const int dustSensorLedPin = 12;
 
 /**
  * Constantes
  */
+#define        COV_RATIO                       0.2            //ug/mmm / mv
+#define        NO_DUST_VOLTAGE                 400            //mv
+#define        SYS_VOLTAGE                     5000           
+
 bool century=false;
 const int switchMax = 32000; // * 100ms = environ 1h (max int 32767)
 bool h12=false;
@@ -30,11 +36,12 @@ bool PM=false;
  */
 bool forceOnState,timerState = false;
 int switchCntr = switchMax + 1;
-int lastSeconds;
+int lastSeconds, lastMinutes, lastHours, lastDate;
 int seconds,minutes,hours,date,year,month,dow,temperature;
 long inUseSeconds[2];
 int maxCurrent[2];
 int minCurrent[2];
+float dustDensity;
 
 /**
  * Objets
@@ -59,33 +66,56 @@ void loop()
   switchLoopHandler();
   timerLoopHandler();
   
-  seconds=rtc.getSecond();
   if (seconds != lastSeconds) {
     onEventSecondChanged(seconds);
     lastSeconds = seconds;
+  }
+  if (minutes != lastMinutes) {
+    onEventMinuteChanged(minutes);
+    lastMinutes = minutes;
+  }
+  if (hours != lastHours) {
+    onEventHourChanged(hours);
+    lastHours = hours;
+  }
+  if (date != lastDate) {
+    onEventDateChanged(date);
+    lastDate = date;
   }
 
   delay(100);
 }
 
+void (* displayFunc[5])() = { temperatureLoopHandler, currentDisplay0, currentDisplay, rangerLoopHandler, dustDensityDisplay};
+
 void onEventSecondChanged(int sec) {
+  lcd.clear();
+
   printDateTimetoLcd();
   printTimerToLcd();
   currentLoopHandler(current0Pin, 0);
   currentLoopHandler(current1Pin, 1);
 
-  lcd.clearLine(2);
-  lcd.clearLine(3);
+  displayFunc[sec % displayFunc.length]();
+}
 
-  if ((sec % 4) == 0) {
-    temperatureLoopHandler();
-  } else if ((sec % 4) == 2) {
-    currentDisplay(0);
-  } else if ((sec % 4) == 3) {
-    currentDisplay(1);
-  } else {
-    rangerLoopHandler();    
-  }
+void onEventMinuteChanged(int minute) {
+  dustDensityLoopHandler();
+}
+
+void onEventHourChanged(int hours) {}
+
+void onEventDateChanged(int date) {
+  inUseSeconds[0] = 0;
+  inUseSeconds[1] = 0;
+}
+
+void currentDisplay0() {
+  currentDisplay(0);
+}
+
+void currentDisplay1() {
+  currentDisplay(1);
 }
 
 void printDateTimetoLcd() {
@@ -223,6 +253,34 @@ void currentDisplay(int pinId) {
   lcd.setCursor(0,3);
   lcd.print(" inUse (s):");
   lcd.print(inUseSeconds[pinId]);
+}
+
+void dustDensityLoopHandler() {
+      
+  // read sensor
+  digitalWrite(dustSensorLedPin, HIGH);
+  delayMicroseconds(280);
+  adcvalue = analogRead(dustSensorOutputPin);
+  digitalWrite(dustSensorLedPin, LOW);
+  
+  // convert voltage
+  float voltage = (SYS_VOLTAGE / 1024.0) * adcvalue;
+  
+  // voltage to density
+  if(voltage >= NO_DUST_VOLTAGE) {
+    voltage -= NO_DUST_VOLTAGE;
+    dustDensity = voltage * COV_RATIO;
+  } else {
+    dustDensity = 0;
+  }
+
+}
+
+void dustDensityDisplay() {
+  lcd.setCursor(0,2);
+  lcd.print("Dust: ");
+  lcd.print((int) dustDensity);
+  lcd.print(" ug/m3");
 }
 
 
