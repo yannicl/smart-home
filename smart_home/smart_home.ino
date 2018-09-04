@@ -5,6 +5,7 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <dht11.h>
+#include "Adafruit_SHT31.h"
 
 /**
  * PINOUT
@@ -42,6 +43,8 @@ long inUseSeconds[2];
 int maxCurrent[2];
 int minCurrent[2];
 float dustDensity;
+float outputAirSht31Temperature = 0;
+float outputAirSht31Humidity = 0;
 
 /**
  * Objets
@@ -49,9 +52,11 @@ float dustDensity;
 DS3231 rtc;
 dht11 DHT11;
 LiquidCrystal_I2C lcd(0x27,20,4);  // Set the LCD I2C address
+Adafruit_SHT31 outputAirSht31 = Adafruit_SHT31();
 
 void setup()  
 {
+  Serial.begin(9600);
   Wire.begin();
   lcd.begin(20,4);
   lcd.backlight();
@@ -59,6 +64,7 @@ void setup()
   pinMode(echoPinRanger, INPUT);
   inUseSeconds[0] = 0;
   inUseSeconds[1] = 0;
+  outputAirSht31.begin(0x44)
 }
 
 void loop() 
@@ -86,7 +92,7 @@ void loop()
   delay(100);
 }
 
-void (* displayFunc[5])() = { temperatureLoopHandler, currentDisplay0, currentDisplay, rangerLoopHandler, dustDensityDisplay};
+void (* displayFunc[6])() = { &temperatureLoopHandler, &currentDisplay0, &currentDisplay1, &rangerLoopHandler, &dustDensityDisplay, &outputAirDisplay};
 
 void onEventSecondChanged(int sec) {
   lcd.clear();
@@ -95,8 +101,9 @@ void onEventSecondChanged(int sec) {
   printTimerToLcd();
   currentLoopHandler(current0Pin, 0);
   currentLoopHandler(current1Pin, 1);
+  outputAirSht31Measure();
 
-  displayFunc[sec % displayFunc.length]();
+  displayFunc[sec % 6]();
 }
 
 void onEventMinuteChanged(int minute) {
@@ -221,6 +228,23 @@ void temperatureLoopHandler()
   lcd.print(DHT11.humidity);
 }
 
+void outputAirSht31Measure() {
+  outputAirSht31Temperature = sht31.readTemperature();
+  outputAirSht31Humidity = sht31.readHumidity();
+}
+
+void outputAirDisplay() {
+  lcd.setCursor(0,2);
+  lcd.print("Output Air");
+  lcd.setCursor(0,3);
+  lcd.print(outputAirSht31Temperature);
+  lcd.print("oC - R%");
+  lcd.print(outputAirSht31Humidity);
+  
+  Serial.print("Temp *C = "); Serial.println(outputAirSht31Temperature);
+  Serial.print("Hum. % = "); Serial.println(outputAirSht31Humidity);
+}
+
 void currentLoopHandler(int pin, int pinId)
 {
   
@@ -260,7 +284,7 @@ void dustDensityLoopHandler() {
   // read sensor
   digitalWrite(dustSensorLedPin, HIGH);
   delayMicroseconds(280);
-  adcvalue = analogRead(dustSensorOutputPin);
+  int adcvalue = analogRead(dustSensorOutputPin);
   digitalWrite(dustSensorLedPin, LOW);
   
   // convert voltage
