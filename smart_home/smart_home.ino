@@ -65,6 +65,7 @@ void setup()
   inUseSeconds[0] = 0;
   inUseSeconds[1] = 0;
   outputAirSht31.begin(0x44);
+  Serial.println("Smart Home Arduino");
 }
 
 void loop() 
@@ -143,6 +144,8 @@ void printDateTimetoLcd() {
   lcd.print("-");
   printZeroPrefix(date);
   lcd.print(date);
+
+  Serial.print(hours);Serial.print(":");Serial.print(minutes);Serial.print(":");Serial.println(seconds);
 }
 
 void printTimerToLcd() {
