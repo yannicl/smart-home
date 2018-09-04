@@ -64,7 +64,7 @@ void setup()
   pinMode(echoPinRanger, INPUT);
   inUseSeconds[0] = 0;
   inUseSeconds[1] = 0;
-  outputAirSht31.begin(0x44)
+  outputAirSht31.begin(0x44);
 }
 
 void loop() 
@@ -229,8 +229,8 @@ void temperatureLoopHandler()
 }
 
 void outputAirSht31Measure() {
-  outputAirSht31Temperature = sht31.readTemperature();
-  outputAirSht31Humidity = sht31.readHumidity();
+  outputAirSht31Temperature = outputAirSht31.readTemperature();
+  outputAirSht31Humidity = outputAirSht31.readHumidity();
 }
 
 void outputAirDisplay() {
