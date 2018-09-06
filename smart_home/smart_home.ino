@@ -342,11 +342,11 @@ void dustDensityMeasure() {
 
 void dustDensityDisplay() {
   lcd.setCursor(0,2);
-  lcd.print("Dust latest : ");
+  lcd.print("Dust Now : ");
   lcd.print((int) dustDensity);
   lcd.print(" ug/m3");
   lcd.setCursor(0,3);
-  lcd.print("Dust average : ");
+  lcd.print("Dust Avr : ");
   lcd.print((int) dustDensityAverage);
   lcd.print(" ug/m3");
 
