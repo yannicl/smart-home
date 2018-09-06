@@ -102,7 +102,9 @@ void loop()
 void (* displayFunc[7])() = { &temperatureLoopHandler, &currentDisplay0, &currentDisplay1, &waterHeightDisplay, &dustDensityDisplay, &outputAirDisplay, &inputAirDisplay};
 
 void onEventSecondChanged(int sec) {
-  lcd.clear();
+  if (sec % 4 == 0) {
+    lcd.clear()
+  }
 
   printDateTimetoLcd();
   printTimerToLcd();
