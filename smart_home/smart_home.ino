@@ -107,7 +107,7 @@ void onEventSecondChanged(int sec) {
   printDateTimetoLcd();
   printTimerToLcd();
   
-  displayFunc[sec % 7]();
+  displayFunc[(sec / 4) % 7]();
 }
 
 void onEventMinuteChanged(int minute) {}
