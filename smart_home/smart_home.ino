@@ -48,6 +48,7 @@ float outputAirSht31Temperature = 0;
 float outputAirSht31Humidity = 0;
 float inputAirSht31Temperature = 0;
 float inputAirSht31Humidity = 0;
+float waterHeight = 0;
 
 /**
  * Objets
@@ -98,18 +99,14 @@ void loop()
   delay(100);
 }
 
-void (* displayFunc[7])() = { &temperatureLoopHandler, &currentDisplay0, &currentDisplay1, &rangerLoopHandler, &dustDensityDisplay, &outputAirDisplay, &inputAirDisplay};
+void (* displayFunc[7])() = { &temperatureLoopHandler, &currentDisplay0, &currentDisplay1, &waterHeightDisplay, &dustDensityDisplay, &outputAirDisplay, &inputAirDisplay};
 
 void onEventSecondChanged(int sec) {
   lcd.clear();
 
   printDateTimetoLcd();
   printTimerToLcd();
-  currentLoopHandler(current0Pin, 0);
-  currentLoopHandler(current1Pin, 1);
-  outputAirSht31Measure();
-  inputAirSht31Measure();
-
+  
   displayFunc[sec % 7]();
 }
 
@@ -124,10 +121,16 @@ void onEventDateChanged(int date) {
 
 void currentDisplay0() {
   currentDisplay(0);
+  
+  // take the measure for next display
+  currentLoopHandler(current0Pin, 0);
 }
 
 void currentDisplay1() {
   currentDisplay(1);
+  
+  // take the measure for next display
+  currentLoopHandler(current1Pin, 1);
 }
 
 void printDateTimetoLcd() {
@@ -210,24 +213,33 @@ void timerLoopHandler()
   } 
 }
 
-void rangerLoopHandler()
+void measureWaterHeight()
 {
   digitalWrite(trigPinRanger, LOW);
   delayMicroseconds(2);
   digitalWrite(trigPinRanger, HIGH);
   delayMicroseconds(10);
   digitalWrite(trigPinRanger, LOW);
-  float cm = pulseIn(echoPinRanger, HIGH) / 58.0; //The echo time is converted into cm
+  waterHeight = pulseIn(echoPinRanger, HIGH) / 58.0; //The echo time is converted into cm
+}
+
+void waterHeightDisplay() {
 
   lcd.setCursor(0,2);
-  lcd.print("WH:");
-  lcd.print((int) cm);
+  lcd.print("Water Height :");
+  lcd.print((int) waterHeight);
+  lcd.print(" cm");
+
+  // take the measure for next display 
+  measureWaterHeight();
 }
 
 void temperatureLoopHandler()
 {
   DHT11.read(DHT11PIN);
-  lcd.setCursor(0,2);  
+  lcd.setCursor(0,2);
+  lcd.print("Sensor box env");
+  lcd.setCursor(0,3);
   lcd.print("T:");
   lcd.print(DHT11.temperature);
   lcd.print("-");
@@ -252,6 +264,9 @@ void outputAirDisplay() {
   lcd.print(outputAirSht31Temperature);
   lcd.print("oC - R%");
   lcd.print(outputAirSht31Humidity);
+  
+  // take the measure for next display
+  outputAirSht31Measure();
 }
 
 void inputAirDisplay() {
@@ -261,6 +276,9 @@ void inputAirDisplay() {
   lcd.print(inputAirSht31Temperature);
   lcd.print("oC - R%");
   lcd.print(inputAirSht31Humidity);
+
+  // take the measure for next display
+  inputAirSht31Measure();
 }
 
 void currentLoopHandler(int pin, int pinId)
