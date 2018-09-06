@@ -109,7 +109,6 @@ void onEventSecondChanged(int sec) {
   currentLoopHandler(current1Pin, 1);
   outputAirSht31Measure();
   inputAirSht31Measure();
-  dustDensityMeasure();
 
   displayFunc[sec % 7]();
 }
@@ -330,6 +329,9 @@ void dustDensityDisplay() {
   lcd.print("Dust average : ");
   lcd.print((int) dustDensityAverage);
   lcd.print(" ug/m3");
+
+  // take the measure for next display
+  dustDensityMeasure();
 }
 
 
