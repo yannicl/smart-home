@@ -43,8 +43,11 @@ long inUseSeconds[2];
 int maxCurrent[2];
 int minCurrent[2];
 float dustDensity;
+float dustDensityAverage;
 float outputAirSht31Temperature = 0;
 float outputAirSht31Humidity = 0;
+float inputAirSht31Temperature = 0;
+float inputAirSht31Humidity = 0;
 
 /**
  * Objets
@@ -53,6 +56,7 @@ DS3231 rtc;
 dht11 DHT11;
 LiquidCrystal_I2C lcd(0x27,20,4);  // Set the LCD I2C address
 Adafruit_SHT31 outputAirSht31 = Adafruit_SHT31();
+Adafruit_SHT31 inputAirSht31 = Adafruit_SHT31();
 
 void setup()  
 {
@@ -65,6 +69,7 @@ void setup()
   inUseSeconds[0] = 0;
   inUseSeconds[1] = 0;
   outputAirSht31.begin(0x44);
+  inputAirSht31.begin(0x45);
   Serial.println("Smart Home Arduino");
 }
 
@@ -93,7 +98,7 @@ void loop()
   delay(100);
 }
 
-void (* displayFunc[6])() = { &temperatureLoopHandler, &currentDisplay0, &currentDisplay1, &rangerLoopHandler, &dustDensityDisplay, &outputAirDisplay};
+void (* displayFunc[7])() = { &temperatureLoopHandler, &currentDisplay0, &currentDisplay1, &rangerLoopHandler, &dustDensityDisplay, &outputAirDisplay, &inputAirDisplay};
 
 void onEventSecondChanged(int sec) {
   lcd.clear();
@@ -103,13 +108,13 @@ void onEventSecondChanged(int sec) {
   currentLoopHandler(current0Pin, 0);
   currentLoopHandler(current1Pin, 1);
   outputAirSht31Measure();
+  inputAirSht31Measure();
+  dustDensityMeasure();
 
-  displayFunc[sec % 6]();
+  displayFunc[sec % 7]();
 }
 
-void onEventMinuteChanged(int minute) {
-  dustDensityLoopHandler();
-}
+void onEventMinuteChanged(int minute) {}
 
 void onEventHourChanged(int hours) {}
 
@@ -236,6 +241,11 @@ void outputAirSht31Measure() {
   outputAirSht31Humidity = outputAirSht31.readHumidity();
 }
 
+void inputAirSht31Measure() {
+  inputAirSht31Temperature = inputAirSht31.readTemperature();
+  inputAirSht31Humidity = inputAirSht31.readHumidity();
+}
+
 void outputAirDisplay() {
   lcd.setCursor(0,2);
   lcd.print("Output Air");
@@ -243,9 +253,15 @@ void outputAirDisplay() {
   lcd.print(outputAirSht31Temperature);
   lcd.print("oC - R%");
   lcd.print(outputAirSht31Humidity);
-  
-  Serial.print("Temp *C = "); Serial.println(outputAirSht31Temperature);
-  Serial.print("Hum. % = "); Serial.println(outputAirSht31Humidity);
+}
+
+void inputAirDisplay() {
+  lcd.setCursor(0,2);
+  lcd.print("Input Air");
+  lcd.setCursor(0,3);
+  lcd.print(inputAirSht31Temperature);
+  lcd.print("oC - R%");
+  lcd.print(inputAirSht31Humidity);
 }
 
 void currentLoopHandler(int pin, int pinId)
@@ -282,7 +298,7 @@ void currentDisplay(int pinId) {
   lcd.print(inUseSeconds[pinId]);
 }
 
-void dustDensityLoopHandler() {
+void dustDensityMeasure() {
       
   // read sensor
   digitalWrite(dustSensorLedPin, HIGH);
@@ -301,12 +317,18 @@ void dustDensityLoopHandler() {
     dustDensity = 0;
   }
 
+  dustDensityAverage = (dustDensityAverage * 0.99) + (dustDensity * 0.01);
+
 }
 
 void dustDensityDisplay() {
   lcd.setCursor(0,2);
-  lcd.print("Dust: ");
+  lcd.print("Dust latest : ");
   lcd.print((int) dustDensity);
+  lcd.print(" ug/m3");
+  lcd.setCursor(0,3);
+  lcd.print("Dust average : ");
+  lcd.print((int) dustDensityAverage);
   lcd.print(" ug/m3");
 }
 
