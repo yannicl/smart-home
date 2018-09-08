@@ -355,8 +355,8 @@ void dustDensityDisplay() {
 void sendAllDataToSerial() {
   Serial.print("Internal Temperature:"); Serial.println(temperature);
   Serial.print("Room Temperature:"); Serial.println(DHT11.temperature);
-  Serial.print("Microwave used time:"); Serial.println(inUseSecond[0]);
-  Serial.print("Heat pump used time:"); Serial.println(inUseSecond[1]);
+  Serial.print("Microwave used time:"); Serial.println(inUseSeconds[0]);
+  Serial.print("Heat pump used time:"); Serial.println(inUseSeconds[1]);
   Serial.print("Dust density:"); Serial.println(dustDensityAverage);
   Serial.print("Output air temperature:"); Serial.println(outputAirSht31Temperature);
   Serial.print("Output air humidity:"); Serial.println(outputAirSht31Humidity);
