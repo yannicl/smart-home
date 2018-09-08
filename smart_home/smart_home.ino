@@ -110,9 +110,16 @@ void onEventSecondChanged(int sec) {
   printTimerToLcd();
   
   displayFunc[(sec / 4) % 7]();
+
+  // current measure is taken
+  // every second to compute used time.
+  currentLoopHandler(current0Pin, 0);
+  currentLoopHandler(current1Pin, 1);
 }
 
-void onEventMinuteChanged(int minute) {}
+void onEventMinuteChanged(int minute) {
+  sendAllDataToSerial();
+}
 
 void onEventHourChanged(int hours) {}
 
@@ -123,16 +130,10 @@ void onEventDateChanged(int date) {
 
 void currentDisplay0() {
   currentDisplay(0);
-  
-  // take the measure for next display
-  currentLoopHandler(current0Pin, 0);
 }
 
 void currentDisplay1() {
   currentDisplay(1);
-  
-  // take the measure for next display
-  currentLoopHandler(current1Pin, 1);
 }
 
 void printDateTimetoLcd() {
@@ -153,8 +154,6 @@ void printDateTimetoLcd() {
   lcd.print("-");
   printZeroPrefix(date);
   lcd.print(date);
-
-  Serial.print(hours);Serial.print(":");Serial.print(minutes);Serial.print(":");Serial.println(seconds);
 }
 
 void printTimerToLcd() {
@@ -285,7 +284,6 @@ void inputAirDisplay() {
 
 void currentLoopHandler(int pin, int pinId)
 {
-  
   maxCurrent[pinId] = 0;
   minCurrent[pinId] = 1024;
   for (int i=0;i<180;i++) {
@@ -352,6 +350,19 @@ void dustDensityDisplay() {
 
   // take the measure for next display
   dustDensityMeasure();
+}
+
+void sendAllDataToSerial() {
+  Serial.print("Internal Temperature:"); Serial.println(temperature);
+  Serial.print("Room Temperature:"); Serial.println(DHT11.temperature);
+  Serial.print("Microwave used time:"); Serial.println(inUseSecond[0]);
+  Serial.print("Heat pump used time:"); Serial.println(inUseSecond[1]);
+  Serial.print("Dust density:"); Serial.println(dustDensityAverage);
+  Serial.print("Output air temperature:"); Serial.println(outputAirSht31Temperature);
+  Serial.print("Output air humidity:"); Serial.println(outputAirSht31Humidity);
+  Serial.print("Input air temperature:"); Serial.println(inputAirSht31Temperature);
+  Serial.print("Input air humidity:"); Serial.println(inputAirSht31Humidity);
+  Serial.print("Water Height:"); Serial.println(waterHeight);
 }
 
 
