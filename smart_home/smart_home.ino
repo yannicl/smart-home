@@ -353,16 +353,19 @@ void dustDensityDisplay() {
 }
 
 void sendAllDataToSerial() {
-  Serial.print("Internal Temperature:"); Serial.println(temperature);
-  Serial.print("Room Temperature:"); Serial.println(DHT11.temperature);
-  Serial.print("Microwave used time:"); Serial.println(inUseSeconds[0]);
-  Serial.print("Heat pump used time:"); Serial.println(inUseSeconds[1]);
-  Serial.print("Dust density:"); Serial.println(dustDensityAverage);
-  Serial.print("Output air temperature:"); Serial.println(outputAirSht31Temperature);
-  Serial.print("Output air humidity:"); Serial.println(outputAirSht31Humidity);
-  Serial.print("Input air temperature:"); Serial.println(inputAirSht31Temperature);
-  Serial.print("Input air humidity:"); Serial.println(inputAirSht31Humidity);
-  Serial.print("Water Height:"); Serial.println(waterHeight);
+  Serial.print("{");
+  Serial.print("'control-internal-temperature':"); Serial.print(temperature); Serial.print(",");
+  Serial.print("'technical-room-temperature':"); Serial.print(DHT11.temperature); Serial.print(",");
+  Serial.print("'technical-room-humidity':"); Serial.print(DHT11.humidity); Serial.print(",");
+  Serial.print("'microwave-used-time':"); Serial.print(inUseSeconds[0]); Serial.print(",");
+  Serial.print("'heat-pump-used-time':"); Serial.print(inUseSeconds[1]); Serial.print(",");
+  Serial.print("'dust-density':"); Serial.print(dustDensityAverage); Serial.print(",");
+  Serial.print("'output-air-temperature':"); Serial.print(outputAirSht31Temperature); Serial.print(",");
+  Serial.print("'output-air-humidity':"); Serial.print(outputAirSht31Humidity); Serial.print(",");
+  Serial.print("'input-air-temperature':"); Serial.print(inputAirSht31Temperature); Serial.print(",");
+  Serial.print("'input-air-humidity':"); Serial.print(inputAirSht31Humidity); Serial.print(",");
+  Serial.print("'water-height':"); Serial.print(waterHeight);
+  Serial.println("}");
 }
 
 
