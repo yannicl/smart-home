@@ -95,7 +95,7 @@ void loop()
     onEventDateChanged(date);
     lastDate = date;
   }
-
+  incomingCommandsHandler();
   delay(100);
 }
 
@@ -205,7 +205,7 @@ void timerLoopHandler()
   dow=rtc.getDoW();
   temperature=rtc.getTemperature();
     
-  if ((hours < 23 && hours > 16) || forceOnState){
+  if ((hours < 23 && hours >= 16) || forceOnState){
     timerState = true;
     digitalWrite(ledPin, HIGH);
   } else {
@@ -358,7 +358,11 @@ void sendAllDataToSerial() {
   Serial.print("'technical-room-temperature':"); Serial.print(DHT11.temperature); Serial.print(",");
   Serial.print("'technical-room-humidity':"); Serial.print(DHT11.humidity); Serial.print(",");
   Serial.print("'microwave-used-time':"); Serial.print(inUseSeconds[0]); Serial.print(",");
+  Serial.print("'microwave-used-min-current':"); Serial.print(minCurrent[0]); Serial.print(",");
+  Serial.print("'microwave-used-max-current':"); Serial.print(maxCurrent[0]); Serial.print(",");
   Serial.print("'heat-pump-used-time':"); Serial.print(inUseSeconds[1]); Serial.print(",");
+  Serial.print("'heat-pump-used-min-current':"); Serial.print(minCurrent[1]); Serial.print(",");
+  Serial.print("'heat-pump-used-max-current':"); Serial.print(maxCurrent[1]); Serial.print(",");
   Serial.print("'dust-density':"); Serial.print(dustDensityAverage); Serial.print(",");
   Serial.print("'output-air-temperature':"); Serial.print(outputAirSht31Temperature); Serial.print(",");
   Serial.print("'output-air-humidity':"); Serial.print(outputAirSht31Humidity); Serial.print(",");
@@ -366,6 +370,41 @@ void sendAllDataToSerial() {
   Serial.print("'input-air-humidity':"); Serial.print(inputAirSht31Humidity); Serial.print(",");
   Serial.print("'water-height':"); Serial.print(waterHeight);
   Serial.println("}");
+}
+
+void incomingCommandsHandler() {
+// supported command : command format
+// set time : T2018-11-23 21:48:22
+  if (Serial.available() > 20) {
+     char data[20];
+     for(int i=0;i<20;i++) {
+        data[i] = Serial.read();
+     }
+     if (data[0] == 'T' && data[1] == '2' && data[2] == '0') {
+       // process change time command
+       int y = charToDigit(data[3]) * 10 + charToDigit(data[4]);
+       int m = charToDigit(data[6]) * 10 + charToDigit(data[7]);
+       int d = charToDigit(data[9]) * 10 + charToDigit(data[10]);
+       int h = charToDigit(data[12]) * 10 + charToDigit(data[13]);
+       int mn = charToDigit(data[15]) * 10 + charToDigit(data[16]);
+       int s = charToDigit(data[18]) * 10 + charToDigit(data[19]);
+       rtc.setYear(y);       
+       rtc.setMonth(m);  
+       rtc.setDate(d);   
+       rtc.setHour(h);   
+       rtc.setMinute(mn); 
+       rtc.setSecond(s); 
+     }
+     // remove any remaining character
+     delay(100);
+     while (Serial.available() > 0) {
+         Serial.read();
+     } 
+  }
+}
+
+int charToDigit(char c) {
+   return (c - '0');
 }
 
 
